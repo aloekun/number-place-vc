@@ -5,7 +5,7 @@ const DIFFICULTY_LEVELS = {
     easy: { minHints: 40, maxHints: 45 },
     medium: { minHints: 30, maxHints: 39 },
     hard: { minHints: 25, maxHints: 29 },
-    expert: { minHints: 17, maxHints: 24 }
+    expert: { minHints: 17, maxHints: 30 }
 };
 
 class PuzzleGenerator {
