@@ -9,7 +9,7 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.js",
     "type-check": "echo 'No TypeScript configured - skipping type check'",
-    "serve": "python3 -m http.server 8000"
+    "serve": "node server.js"
   },
   "keywords": [
     "sudoku",
@@ -25,6 +25,7 @@
     "@babel/preset-env": "^7.28.0",
     "babel-jest": "^30.0.5",
     "eslint": "^8.0.0",
+    "http-server": "^14.1.1",
     "jest": "^29.0.0",
     "jest-environment-jsdom": "^30.0.5"
   },
