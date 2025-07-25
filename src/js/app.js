@@ -23,7 +23,7 @@ class NumberPlaceApp {
         this.uiController = new UIController(this.gameState, this.ruleEngine);
         this.bindAppEvents();
         
-        console.log('Number Place App initialized');
+        // アプリケーション初期化完了
     }
 
     bindAppEvents() {
@@ -47,12 +47,12 @@ class NumberPlaceApp {
             
             if (puzzle) {
                 this.uiController.onPuzzleLoaded(puzzle);
-                console.log('New puzzle generated successfully');
+                // パズル生成成功
             } else {
                 this.showError('問題の生成に失敗しました。もう一度お試しください。');
             }
         } catch (error) {
-            console.error('Error generating puzzle:', error);
+            // パズル生成エラー: error
             this.showError('問題の生成中にエラーが発生しました。');
         } finally {
             this.hideLoadingState();
@@ -64,7 +64,7 @@ class NumberPlaceApp {
             setTimeout(() => {
                 const puzzle = this.puzzleGenerator.createPuzzle(difficulty);
                 resolve(puzzle);
-            }, 100);
+            }, 100); // eslint-disable-line no-magic-numbers
         });
     }
 
@@ -99,7 +99,7 @@ class NumberPlaceApp {
             if (statusElement) {
                 statusElement.textContent = '問題を生成してください';
             }
-        }, 3000);
+        }, 3000); // eslint-disable-line no-magic-numbers
     }
 
     getDifficulty() {
@@ -108,4 +108,4 @@ class NumberPlaceApp {
     }
 }
 
-const app = new NumberPlaceApp();
+new NumberPlaceApp();

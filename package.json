@@ -11,22 +11,41 @@
     "type-check": "echo 'No TypeScript configured - skipping type check'",
     "serve": "python3 -m http.server 8000"
   },
-  "keywords": ["sudoku", "number-place", "puzzle", "javascript", "web-game"],
+  "keywords": [
+    "sudoku",
+    "number-place",
+    "puzzle",
+    "javascript",
+    "web-game"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "babel-jest": "^30.0.5",
+    "eslint": "^8.0.0",
     "jest": "^29.0.0",
-    "eslint": "^8.0.0"
+    "jest-environment-jsdom": "^30.0.5"
   },
   "jest": {
     "testEnvironment": "jsdom",
-    "testMatch": ["**/tests/**/*.test.js"],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/**/*.test.js"
     ],
     "coverageDirectory": "coverage",
-    "coverageReporters": ["text", "lcov", "html"]
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    }
   },
   "eslintConfig": {
     "env": {
@@ -42,8 +61,20 @@
     "rules": {
       "no-unused-vars": "error",
       "no-console": "warn",
-      "complexity": ["error", 10],
-      "no-magic-numbers": ["error", { "ignore": [0, 1, -1] }]
+      "complexity": [
+        "error",
+        10
+      ],
+      "no-magic-numbers": [
+        "error",
+        {
+          "ignore": [
+            0,
+            1,
+            -1
+          ]
+        }
+      ]
     }
   }
 }
