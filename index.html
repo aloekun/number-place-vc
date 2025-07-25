@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ナンバープレース - Number Place</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>ナンバープレース</h1>
+            <div class="game-controls">
+                <button id="new-game" class="btn btn-primary">新しい問題</button>
+                <button id="reset-game" class="btn btn-secondary">リセット</button>
+                <button id="undo-move" class="btn btn-secondary">元に戻す</button>
+            </div>
+        </header>
+
+        <main class="game-area">
+            <div class="game-info">
+                <div class="timer">
+                    <span class="label">経過時間:</span>
+                    <span id="elapsed-time">00:00</span>
+                </div>
+                <div class="status">
+                    <span id="game-status">問題を生成してください</span>
+                </div>
+            </div>
+
+            <div class="grid-container">
+                <div id="sudoku-grid" class="sudoku-grid">
+                    <!-- グリッドはJavaScriptで動的生成 -->
+                </div>
+            </div>
+
+            <div class="input-panel">
+                <div class="number-buttons">
+                    <button class="number-btn" data-number="1">1</button>
+                    <button class="number-btn" data-number="2">2</button>
+                    <button class="number-btn" data-number="3">3</button>
+                    <button class="number-btn" data-number="4">4</button>
+                    <button class="number-btn" data-number="5">5</button>
+                    <button class="number-btn" data-number="6">6</button>
+                    <button class="number-btn" data-number="7">7</button>
+                    <button class="number-btn" data-number="8">8</button>
+                    <button class="number-btn" data-number="9">9</button>
+                    <button class="number-btn clear-btn" data-number="0">消去</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <p>ナンバープレースゲーム - HTML5 & JavaScript</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript modules -->
+    <script type="module" src="src/js/models/Grid.js"></script>
+    <script type="module" src="src/js/models/RuleEngine.js"></script>
+    <script type="module" src="src/js/models/PuzzleGenerator.js"></script>
+    <script type="module" src="src/js/models/GameState.js"></script>
+    <script type="module" src="src/js/controllers/UIController.js"></script>
+    <script type="module" src="src/js/app.js"></script>
+</body>
+</html>

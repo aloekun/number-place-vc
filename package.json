@@ -1,0 +1,49 @@
+{
+  "name": "number-place-vc",
+  "version": "1.0.0",
+  "description": "Web-based Sudoku (Number Place) game with auto-generation and interactive solving",
+  "main": "index.html",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.js",
+    "type-check": "echo 'No TypeScript configured - skipping type check'",
+    "serve": "python3 -m http.server 8000"
+  },
+  "keywords": ["sudoku", "number-place", "puzzle", "javascript", "web-game"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/*.test.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"]
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "es2021": true,
+      "jest": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "ecmaVersion": 2021,
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-unused-vars": "error",
+      "no-console": "warn",
+      "complexity": ["error", 10],
+      "no-magic-numbers": ["error", { "ignore": [0, 1, -1] }]
+    }
+  }
+}
