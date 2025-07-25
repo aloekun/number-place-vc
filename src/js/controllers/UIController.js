@@ -8,6 +8,7 @@ class UIController {
         this.selectedCell = null;
         this.gridElement = null;
         this.timerInterval = null;
+        this.candidateMode = false;
         
         this.initializeUI();
         this.bindEvents();
@@ -42,6 +43,10 @@ class UIController {
                 this.handleNumberInput(number);
             });
         });
+
+        document.getElementById('toggle-input-mode').addEventListener('click', () => {
+            this.toggleInputMode();
+        });
     }
 
     renderGrid() {
@@ -65,15 +70,30 @@ class UIController {
 
         const value = this.gameState.getCellValue(row, col);
         const cellType = this.gameState.getCellType(row, col);
+        const candidates = this.gameState.getCandidates(row, col);
 
+        // Main value element
+        const mainValue = document.createElement('div');
+        mainValue.className = 'main-value';
         if (value !== EMPTY_CELL) {
-            cell.textContent = value;
+            mainValue.textContent = value;
         }
+        cell.appendChild(mainValue);
 
+        // Candidate grid element
+        const candidateGrid = this.createCandidateGrid(candidates);
+        cell.appendChild(candidateGrid);
+
+        // Update cell classes
         if (cellType === CELL_TYPE.GIVEN) {
             cell.classList.add('given');
         } else if (cellType === CELL_TYPE.USER) {
             cell.classList.add('user-input');
+        }
+
+        // Show candidates if cell is empty and has candidates
+        if (value === EMPTY_CELL && candidates.size > 0) {
+            cell.classList.add('has-candidates');
         }
 
         cell.addEventListener('click', () => {
@@ -118,12 +138,19 @@ class UIController {
         
         if (key >= '1' && key <= '9') {
             const number = parseInt(key);
-            this.handleNumberInput(number);
+            if (event.shiftKey) {
+                // Shift + number = candidate mode
+                this.handleCandidateInput(number);
+            } else {
+                this.handleNumberInput(number);
+            }
         } else if (key === 'Delete' || key === 'Backspace' || key === '0') {
             this.handleNumberInput(EMPTY_CELL);
         } else if (key === 'Escape') {
             this.selectedCell = null;
             this.updateCellSelection();
+        } else if (key === 'c' || key === 'C') {
+            this.toggleInputMode();
         }
     }
 
@@ -132,10 +159,15 @@ class UIController {
 
         const { row, col } = this.selectedCell;
         
-        if (this.gameState.makeMove(row, col, number)) {
-            this.updateCell(row, col);
-            this.showValidationErrors();
-            this.updateGameStatus();
+        if (this.candidateMode) {
+            this.handleCandidateInput(number);
+        } else {
+            if (this.gameState.makeMove(row, col, number)) {
+                this.updateCell(row, col);
+                this.updateRelatedCells(row, col);
+                this.showValidationErrors();
+                this.updateGameStatus();
+            }
         }
     }
 
@@ -145,13 +177,29 @@ class UIController {
 
         const value = this.gameState.getCellValue(row, col);
         const cellType = this.gameState.getCellType(row, col);
+        const candidates = this.gameState.getCandidates(row, col);
 
-        cellElement.textContent = value !== EMPTY_CELL ? value : '';
+        // Update main value
+        const mainValue = cellElement.querySelector('.main-value');
+        if (mainValue) {
+            mainValue.textContent = value !== EMPTY_CELL ? value : '';
+        }
+
+        // Update candidate grid
+        const candidateGrid = cellElement.querySelector('.candidate-grid');
+        if (candidateGrid) {
+            this.updateCandidateGrid(candidateGrid, candidates);
+        }
         
-        cellElement.classList.remove('user-input', 'error');
+        cellElement.classList.remove('user-input', 'error', 'has-candidates');
         
         if (cellType === CELL_TYPE.USER) {
             cellElement.classList.add('user-input');
+        }
+
+        // Show candidates if cell is empty and has candidates
+        if (value === EMPTY_CELL && candidates.size > 0) {
+            cellElement.classList.add('has-candidates');
         }
     }
 
@@ -246,6 +294,72 @@ class UIController {
     dispatchEvent(eventName, data = null) {
         const event = new CustomEvent(eventName, { detail: data });
         document.dispatchEvent(event);
+    }
+
+    createCandidateGrid(candidates) {
+        const candidateGrid = document.createElement('div');
+        candidateGrid.className = 'candidate-grid';
+        
+        for (let i = 1; i <= 9; i++) {
+            const candidateNumber = document.createElement('div');
+            candidateNumber.className = 'candidate-number';
+            candidateNumber.textContent = i;
+            
+            if (candidates.has(i)) {
+                candidateNumber.classList.add('visible');
+            }
+            
+            candidateGrid.appendChild(candidateNumber);
+        }
+        
+        return candidateGrid;
+    }
+
+    updateCandidateGrid(candidateGrid, candidates) {
+        const candidateNumbers = candidateGrid.querySelectorAll('.candidate-number');
+        candidateNumbers.forEach((element, index) => {
+            const number = index + 1;
+            if (candidates.has(number)) {
+                element.classList.add('visible');
+            } else {
+                element.classList.remove('visible');
+            }
+        });
+    }
+
+    handleCandidateInput(number) {
+        if (!this.selectedCell) return;
+
+        const { row, col } = this.selectedCell;
+        
+        if (this.gameState.makeCandidateMove(row, col, number, 'toggle')) {
+            this.updateCell(row, col);
+        }
+    }
+
+    toggleInputMode() {
+        this.candidateMode = !this.candidateMode;
+        this.updateInputModeIndicator();
+    }
+
+    updateInputModeIndicator() {
+        const indicator = document.getElementById('input-mode-indicator');
+        if (indicator) {
+            if (this.candidateMode) {
+                indicator.classList.add('candidate-mode');
+                indicator.textContent = '候補入力';
+            } else {
+                indicator.classList.remove('candidate-mode');
+                indicator.textContent = '通常入力';
+            }
+        }
+    }
+
+    updateRelatedCells(row, col) {
+        const relatedCells = this.gameState.currentGrid.getRelatedCells(row, col);
+        relatedCells.forEach(({ row: r, col: c }) => {
+            this.updateCell(r, c);
+        });
     }
 
     onPuzzleLoaded(puzzle) {

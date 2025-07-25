@@ -191,4 +191,67 @@ describe('Grid', () => {
             expect(grid.isFull()).toBe(true);
         });
     });
+
+    describe('getRelatedCells', () => {
+        test('should return related cells for center position', () => {
+            const relatedCells = grid.getRelatedCells(4, 4);
+            
+            // 同一行: 8セル（自分以外）
+            // 同一列: 8セル（自分以外、行との重複除く）
+            // 同一ブロック: 8セル（自分以外、行・列との重複除く）
+            const expectedCount = 20; // 3×3 + 3×3 + 3×3 - 重複 = 20
+            expect(relatedCells).toHaveLength(expectedCount);
+            
+            // 自分自身は含まれない
+            expect(relatedCells.find(cell => cell.row === 4 && cell.col === 4)).toBeUndefined();
+            
+            // 同一行のセルが含まれる
+            expect(relatedCells.find(cell => cell.row === 4 && cell.col === 0)).toBeDefined();
+            expect(relatedCells.find(cell => cell.row === 4 && cell.col === 8)).toBeDefined();
+            
+            // 同一列のセルが含まれる
+            expect(relatedCells.find(cell => cell.row === 0 && cell.col === 4)).toBeDefined();
+            expect(relatedCells.find(cell => cell.row === 8 && cell.col === 4)).toBeDefined();
+            
+            // 同一ブロックのセルが含まれる
+            expect(relatedCells.find(cell => cell.row === 3 && cell.col === 3)).toBeDefined();
+            expect(relatedCells.find(cell => cell.row === 5 && cell.col === 5)).toBeDefined();
+        });
+
+        test('should return related cells for corner position', () => {
+            const relatedCells = grid.getRelatedCells(0, 0);
+            
+            const expectedCount = 20;
+            expect(relatedCells).toHaveLength(expectedCount);
+            
+            // 自分自身は含まれない
+            expect(relatedCells.find(cell => cell.row === 0 && cell.col === 0)).toBeUndefined();
+            
+            // 同一行のセルが含まれる
+            expect(relatedCells.find(cell => cell.row === 0 && cell.col === 8)).toBeDefined();
+            
+            // 同一列のセルが含まれる
+            expect(relatedCells.find(cell => cell.row === 8 && cell.col === 0)).toBeDefined();
+            
+            // 同一ブロックのセルが含まれる
+            expect(relatedCells.find(cell => cell.row === 2 && cell.col === 2)).toBeDefined();
+        });
+
+        test('should return empty array for invalid position', () => {
+            const relatedCells = grid.getRelatedCells(-1, 5);
+            expect(relatedCells).toEqual([]);
+            
+            const relatedCells2 = grid.getRelatedCells(5, 10);
+            expect(relatedCells2).toEqual([]);
+        });
+
+        test('should not include duplicates in related cells', () => {
+            const relatedCells = grid.getRelatedCells(4, 4);
+            
+            // 重複がないことを確認
+            const cellKeys = relatedCells.map(cell => `${cell.row},${cell.col}`);
+            const uniqueKeys = new Set(cellKeys);
+            expect(cellKeys.length).toBe(uniqueKeys.size);
+        });
+    });
 });

@@ -311,4 +311,210 @@ describe('GameState - Move Operations', () => {
             expect(result).toBe(false); // 完了状態では元に戻せない
         });
     });
+
+    describe('Candidate Operations', () => {
+        describe('makeCandidateMove', () => {
+            test('should toggle candidate successfully', () => {
+                const result = gameState.makeCandidateMove(0, 2, 5, 'toggle');
+                
+                expect(result).toBe(true);
+                expect(gameState.getCandidates(0, 2)).toContain(5);
+                expect(gameState.moveHistory).toHaveLength(1);
+                expect(gameState.moveHistory[0].type).toBe('candidate');
+            });
+
+            test('should not allow candidate move on given cells', () => {
+                const result = gameState.makeCandidateMove(0, 0, 5, 'toggle');
+                
+                expect(result).toBe(false);
+                expect(gameState.moveHistory).toHaveLength(0);
+            });
+
+            test('should add candidate with add action', () => {
+                const result = gameState.makeCandidateMove(0, 2, 5, 'add');
+                
+                expect(result).toBe(true);
+                expect(gameState.getCandidates(0, 2)).toContain(5);
+            });
+
+            test('should remove candidate with remove action', () => {
+                gameState.makeCandidateMove(0, 2, 5, 'add');
+                const result = gameState.makeCandidateMove(0, 2, 5, 'remove');
+                
+                expect(result).toBe(true);
+                expect(gameState.getCandidates(0, 2)).not.toContain(5);
+            });
+
+            test('should record candidate move in history', () => {
+                const beforeTime = Date.now();
+                gameState.makeCandidateMove(0, 2, 5, 'toggle');
+                const afterTime = Date.now();
+                
+                const move = gameState.moveHistory[0];
+                expect(move.row).toBe(0);
+                expect(move.col).toBe(2);
+                expect(move.type).toBe('candidate');
+                expect(move.timestamp).toBeGreaterThanOrEqual(beforeTime);
+                expect(move.timestamp).toBeLessThanOrEqual(afterTime);
+                expect(move.oldCandidates).toBeInstanceOf(Set);
+                expect(move.newCandidates).toBeInstanceOf(Set);
+            });
+        });
+
+        describe('undoMove - Candidate Operations', () => {
+            test('should undo candidate move successfully', () => {
+                gameState.makeCandidateMove(0, 2, 5, 'add');
+                expect(gameState.getCandidates(0, 2)).toContain(5);
+                
+                const result = gameState.undoMove();
+                
+                expect(result).toBe(true);
+                expect(gameState.getCandidates(0, 2)).not.toContain(5);
+                expect(gameState.moveHistory).toHaveLength(0);
+            });
+
+            test('should undo mixed main and candidate moves correctly', () => {
+                gameState.makeMove(0, 2, 7);
+                gameState.makeCandidateMove(0, 3, 5, 'add');
+                gameState.makeCandidateMove(0, 3, 6, 'add');
+                
+                expect(gameState.getCellValue(0, 2)).toBe(7);
+                expect(gameState.getCandidates(0, 3)).toContain(5);
+                expect(gameState.getCandidates(0, 3)).toContain(6);
+                expect(gameState.moveHistory).toHaveLength(3);
+                
+                gameState.undoMove();
+                expect(gameState.getCandidates(0, 3)).toContain(5);
+                expect(gameState.getCandidates(0, 3)).not.toContain(6);
+                
+                gameState.undoMove();
+                expect(gameState.getCandidates(0, 3)).not.toContain(5);
+                
+                gameState.undoMove();
+                expect(gameState.getCellValue(0, 2)).toBe(EMPTY_CELL);
+            });
+        });
+
+        describe('Candidate Accessor Methods', () => {
+            test('should get candidates correctly', () => {
+                gameState.makeCandidateMove(0, 2, 5, 'add');
+                gameState.makeCandidateMove(0, 2, 7, 'add');
+                
+                const candidates = gameState.getCandidates(0, 2);
+                expect(candidates).toContain(5);
+                expect(candidates).toContain(7);
+                expect(candidates).not.toContain(3);
+            });
+
+            test('should set candidates correctly', () => {
+                const newCandidates = new Set([1, 3, 5]);
+                const result = gameState.setCandidates(0, 2, newCandidates);
+                
+                expect(result).toBe(true);
+                expect(gameState.getCandidates(0, 2)).toEqual(newCandidates);
+            });
+
+            test('should clear candidates correctly', () => {
+                gameState.makeCandidateMove(0, 2, 5, 'add');
+                gameState.makeCandidateMove(0, 2, 7, 'add');
+                
+                const result = gameState.clearCandidates(0, 2);
+                
+                expect(result).toBe(true);
+                expect(gameState.getCandidates(0, 2).size).toBe(0);
+            });
+
+            test('should check if cell has candidates', () => {
+                expect(gameState.hasCandidates(0, 2)).toBe(false);
+                
+                gameState.makeCandidateMove(0, 2, 5, 'add');
+                expect(gameState.hasCandidates(0, 2)).toBe(true);
+                
+                gameState.clearCandidates(0, 2);
+                expect(gameState.hasCandidates(0, 2)).toBe(false);
+            });
+        });
+    });
+
+    describe('Auto Clear Related Candidates', () => {
+        test('should clear related candidates when making main move', () => {
+            // 候補を設定（空のセルに）
+            gameState.makeCandidateMove(0, 3, 5, 'add'); // 同一行
+            gameState.makeCandidateMove(2, 2, 5, 'add'); // 同一列
+            gameState.makeCandidateMove(1, 2, 5, 'add'); // 同一ブロック
+            gameState.makeCandidateMove(3, 3, 5, 'add'); // 異なるブロック
+            
+            expect(gameState.getCandidates(0, 3)).toContain(5);
+            expect(gameState.getCandidates(2, 2)).toContain(5);
+            expect(gameState.getCandidates(1, 2)).toContain(5);
+            expect(gameState.getCandidates(3, 3)).toContain(5);
+            
+            // 空のセル(0, 2)に5を入力
+            gameState.makeMove(0, 2, 5);
+            
+            // 関連するセルの候補5が削除される
+            expect(gameState.getCandidates(0, 3)).not.toContain(5); // 同一行
+            expect(gameState.getCandidates(2, 2)).not.toContain(5); // 同一列
+            expect(gameState.getCandidates(1, 2)).not.toContain(5); // 同一ブロック
+            expect(gameState.getCandidates(3, 3)).toContain(5); // 異なるブロックは残る
+        });
+
+        test('should record auto clear candidates in history', () => {
+            gameState.makeCandidateMove(0, 3, 7, 'add');
+            gameState.makeCandidateMove(2, 2, 7, 'add');
+            
+            const historyLengthBefore = gameState.moveHistory.length;
+            gameState.makeMove(0, 2, 7);
+            
+            // メイン移動 + 候補自動削除の2つの履歴が追加される
+            expect(gameState.moveHistory.length).toBe(historyLengthBefore + 2);
+            
+            const lastMove = gameState.moveHistory[gameState.moveHistory.length - 1];
+            expect(lastMove.type).toBe('auto_clear_candidates');
+            expect(lastMove.clearedCandidates).toHaveLength(2);
+        });
+
+        test('should restore cleared candidates on undo', () => {
+            gameState.makeCandidateMove(0, 3, 3, 'add');
+            gameState.makeCandidateMove(2, 2, 3, 'add');
+            
+            gameState.makeMove(0, 2, 3);
+            
+            expect(gameState.getCandidates(0, 3)).not.toContain(3);
+            expect(gameState.getCandidates(2, 2)).not.toContain(3);
+            
+            // undo候補自動削除
+            gameState.undoMove();
+            expect(gameState.getCandidates(0, 3)).toContain(3);
+            expect(gameState.getCandidates(2, 2)).toContain(3);
+            
+            // undoメイン移動
+            gameState.undoMove();
+            expect(gameState.getCellValue(0, 2)).toBe(EMPTY_CELL);
+        });
+
+        test('should not clear candidates if no related candidates exist', () => {
+            const historyLengthBefore = gameState.moveHistory.length;
+            gameState.makeMove(0, 2, 9);
+            
+            // メイン移動のみ追加される（候補削除は発生しない）
+            expect(gameState.moveHistory.length).toBe(historyLengthBefore + 1);
+            expect(gameState.moveHistory[gameState.moveHistory.length - 1].type).toBe('main');
+        });
+
+        test('should only clear candidates for the specific value', () => {
+            gameState.makeCandidateMove(0, 3, 4, 'add');
+            gameState.makeCandidateMove(0, 3, 6, 'add');
+            gameState.makeCandidateMove(2, 2, 4, 'add');
+            gameState.makeCandidateMove(2, 2, 8, 'add');
+            
+            gameState.makeMove(0, 2, 4);
+            
+            // 候補4のみ削除、他の候補は残る
+            expect(gameState.getCandidates(0, 3)).not.toContain(4);
+            expect(gameState.getCandidates(0, 3)).toContain(6);
+            expect(gameState.getCandidates(2, 2)).not.toContain(4);
+            expect(gameState.getCandidates(2, 2)).toContain(8);
+        });
+    });
 });

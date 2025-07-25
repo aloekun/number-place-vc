@@ -79,12 +79,18 @@ class GameState {
             col,
             oldValue,
             newValue: value,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            type: 'main'
         };
 
         this.currentGrid.setCellValue(row, col, value);
         this.cellTypes[row][col] = value === EMPTY_CELL ? CELL_TYPE.EMPTY : CELL_TYPE.USER;
         this.moveHistory.push(move);
+
+        // 通常入力時に関連候補を自動削除
+        if (value !== EMPTY_CELL) {
+            this.clearRelatedCandidates(row, col, value);
+        }
 
         if (this.isComplete()) {
             this.endTime = Date.now();
@@ -94,15 +100,66 @@ class GameState {
         return true;
     }
 
+    makeCandidateMove(row, col, value, action = 'toggle') {
+        if (this.status !== GAME_STATUS.IN_PROGRESS) {
+            return false;
+        }
+
+        if (this.cellTypes[row][col] === CELL_TYPE.GIVEN) {
+            return false;
+        }
+
+        const oldCandidates = this.currentGrid.getCandidates(row, col);
+        let newCandidates;
+        let success = false;
+
+        if (action === 'toggle') {
+            success = this.currentGrid.toggleCandidate(row, col, value);
+            newCandidates = this.currentGrid.getCandidates(row, col);
+        } else if (action === 'add') {
+            success = this.currentGrid.addCandidate(row, col, value);
+            newCandidates = this.currentGrid.getCandidates(row, col);
+        } else if (action === 'remove') {
+            success = this.currentGrid.removeCandidate(row, col, value);
+            newCandidates = this.currentGrid.getCandidates(row, col);
+        }
+
+        if (!success) {
+            return false;
+        }
+
+        const move = {
+            row,
+            col,
+            oldCandidates: new Set(oldCandidates),
+            newCandidates: new Set(newCandidates),
+            timestamp: Date.now(),
+            type: 'candidate'
+        };
+
+        this.moveHistory.push(move);
+        return true;
+    }
+
     undoMove() {
         if (this.moveHistory.length === 0 || this.status !== GAME_STATUS.IN_PROGRESS) {
             return false;
         }
 
         const lastMove = this.moveHistory.pop();
-        this.currentGrid.setCellValue(lastMove.row, lastMove.col, lastMove.oldValue);
-        this.cellTypes[lastMove.row][lastMove.col] = 
-            lastMove.oldValue === EMPTY_CELL ? CELL_TYPE.EMPTY : CELL_TYPE.USER;
+        
+        if (lastMove.type === 'main') {
+            this.currentGrid.setCellValue(lastMove.row, lastMove.col, lastMove.oldValue);
+            this.cellTypes[lastMove.row][lastMove.col] = 
+                lastMove.oldValue === EMPTY_CELL ? CELL_TYPE.EMPTY : CELL_TYPE.USER;
+        } else if (lastMove.type === 'candidate') {
+            this.currentGrid.setCandidates(lastMove.row, lastMove.col, lastMove.oldCandidates);
+        } else if (lastMove.type === 'auto_clear_candidates') {
+            // 自動削除された候補を復元
+            lastMove.clearedCandidates.forEach(({ row, col, oldCandidates }) => {
+                this.currentGrid.setCandidates(row, col, oldCandidates);
+            });
+        }
 
         return true;
     }
@@ -156,6 +213,55 @@ class GameState {
             return null;
         }
         return this.cellTypes[row][col];
+    }
+
+    getCandidates(row, col) {
+        return this.currentGrid.getCandidates(row, col);
+    }
+
+    setCandidates(row, col, candidatesSet) {
+        return this.currentGrid.setCandidates(row, col, candidatesSet);
+    }
+
+    clearCandidates(row, col) {
+        return this.currentGrid.clearCandidates(row, col);
+    }
+
+    hasCandidates(row, col) {
+        return this.currentGrid.hasCandidates(row, col);
+    }
+
+    clearRelatedCandidates(row, col, value) {
+        const relatedCells = this.currentGrid.getRelatedCells(row, col);
+        const clearedCandidates = [];
+
+        relatedCells.forEach(({ row: r, col: c }) => {
+            if (this.currentGrid.getCandidates(r, c).has(value)) {
+                const oldCandidates = this.currentGrid.getCandidates(r, c);
+                this.currentGrid.removeCandidate(r, c, value);
+                const newCandidates = this.currentGrid.getCandidates(r, c);
+
+                clearedCandidates.push({
+                    row: r,
+                    col: c,
+                    oldCandidates: new Set(oldCandidates),
+                    newCandidates: new Set(newCandidates)
+                });
+            }
+        });
+
+        // 候補削除操作を履歴に追加
+        if (clearedCandidates.length > 0) {
+            const autoClearMove = {
+                row,
+                col,
+                value,
+                clearedCandidates,
+                timestamp: Date.now(),
+                type: 'auto_clear_candidates'
+            };
+            this.moveHistory.push(autoClearMove);
+        }
     }
 
     getGameStatus() {
