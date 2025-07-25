@@ -17,6 +17,7 @@ class UIController {
     initializeUI() {
         this.gridElement = document.getElementById('sudoku-grid');
         this.renderGrid();
+        this.updateNumberUsage();
         this.startTimer();
     }
 
@@ -165,6 +166,7 @@ class UIController {
             if (this.gameState.makeMove(row, col, number)) {
                 this.updateCell(row, col);
                 this.updateRelatedCells(row, col);
+                this.updateNumberUsage();
                 this.showValidationErrors();
                 this.updateGameStatus();
             }
@@ -258,6 +260,7 @@ class UIController {
             this.renderGrid();
             this.selectedCell = null;
             this.updateCellSelection();
+            this.updateNumberUsage();
             this.updateGameStatus();
         }
     }
@@ -265,6 +268,7 @@ class UIController {
     handleUndoMove() {
         if (this.gameState.undoMove()) {
             this.renderGrid();
+            this.updateNumberUsage();
             this.showValidationErrors();
             this.updateGameStatus();
         }
@@ -362,11 +366,27 @@ class UIController {
         });
     }
 
+    updateNumberUsage() {
+        const usage = this.gameState.getAllNumberUsage();
+        
+        for (let num = 1; num <= 9; num++) {
+            const element = document.querySelector(`.usage-number[data-number="${num}"]`);
+            if (element) {
+                if (usage[num].complete) {
+                    element.classList.add('complete');
+                } else {
+                    element.classList.remove('complete');
+                }
+            }
+        }
+    }
+
     onPuzzleLoaded(puzzle) {
         if (this.gameState.startNewGame(puzzle)) {
             this.renderGrid();
             this.selectedCell = null;
             this.updateCellSelection();
+            this.updateNumberUsage();
             this.updateGameStatus();
         }
     }

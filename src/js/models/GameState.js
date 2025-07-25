@@ -291,6 +291,37 @@ class GameState {
         }
         return false;
     }
+
+    getNumberUsageCount(number) {
+        if (number < 1 || number > 9) {
+            return 0;
+        }
+
+        let count = 0;
+        for (let row = 0; row < this.currentGrid.size; row++) {
+            for (let col = 0; col < this.currentGrid.size; col++) {
+                if (this.currentGrid.getCellValue(row, col) === number) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    isNumberComplete(number) {
+        return this.getNumberUsageCount(number) === 9;
+    }
+
+    getAllNumberUsage() {
+        const usage = {};
+        for (let num = 1; num <= 9; num++) {
+            usage[num] = {
+                count: this.getNumberUsageCount(num),
+                complete: this.isNumberComplete(num)
+            };
+        }
+        return usage;
+    }
 }
 
 export { GameState, GAME_STATUS, CELL_TYPE };
