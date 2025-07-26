@@ -1,6 +1,11 @@
 import { EMPTY_CELL } from '../models/Grid.js';
 import { CELL_TYPE, GAME_STATUS } from '../models/GameState.js';
 
+const GRID_SIZE = 9;
+const ALERT_DELAY_MS = 100;
+const TIMER_INTERVAL_MS = 1000;
+const FEEDBACK_DISPLAY_MS = 1000;
+
 class UIController {
     constructor(gameState, ruleEngine) {
         this.gameState = gameState;
@@ -12,6 +17,7 @@ class UIController {
         
         this.initializeUI();
         this.bindEvents();
+        this.updateSaveRestoreButtons();
     }
 
     initializeUI() {
@@ -42,6 +48,14 @@ class UIController {
             this.handleResumeGame();
         });
 
+        document.getElementById('save-state').addEventListener('click', () => {
+            this.handleSaveState();
+        });
+
+        document.getElementById('restore-state').addEventListener('click', () => {
+            this.handleRestoreState();
+        });
+
         document.addEventListener('keydown', (event) => {
             this.handleKeyInput(event);
         });
@@ -63,8 +77,8 @@ class UIController {
 
         this.gridElement.innerHTML = '';
 
-        for (let row = 0; row < 9; row++) {
-            for (let col = 0; col < 9; col++) {
+        for (let row = 0; row < GRID_SIZE; row++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
                 const cell = this.createCellElement(row, col);
                 this.gridElement.appendChild(cell);
             }
@@ -261,7 +275,7 @@ class UIController {
         this.stopTimer();
         setTimeout(() => {
             alert(`おめでとうございます！\n完了時間: ${this.gameState.getFormattedTime()}`);
-        }, 100);
+        }, ALERT_DELAY_MS);
     }
 
     handleNewGame() {
@@ -279,6 +293,7 @@ class UIController {
             this.updateNumberSelection();
             this.updateNumberUsage();
             this.updateGameStatus();
+            this.updateSaveRestoreButtons();
         }
     }
 
@@ -292,6 +307,7 @@ class UIController {
             this.updateNumberUsage();
             this.showValidationErrors();
             this.updateGameStatus();
+            this.updateSaveRestoreButtons();
         }
     }
 
@@ -299,7 +315,7 @@ class UIController {
         this.stopTimer();
         this.timerInterval = setInterval(() => {
             this.updateTimer();
-        }, 1000);
+        }, TIMER_INTERVAL_MS);
     }
 
     stopTimer() {
@@ -325,7 +341,7 @@ class UIController {
         const candidateGrid = document.createElement('div');
         candidateGrid.className = 'candidate-grid';
         
-        for (let i = 1; i <= 9; i++) {
+        for (let i = 1; i <= GRID_SIZE; i++) {
             const candidateNumber = document.createElement('div');
             candidateNumber.className = 'candidate-number';
             candidateNumber.textContent = i;
@@ -375,6 +391,7 @@ class UIController {
         if (this.gameState.pauseGame()) {
             this.showPauseOverlay();
             this.updateGameStatus();
+            this.updateSaveRestoreButtons();
         }
     }
 
@@ -386,6 +403,7 @@ class UIController {
         if (this.gameState.resumeGame()) {
             this.hidePauseOverlay();
             this.updateGameStatus();
+            this.updateSaveRestoreButtons();
         }
     }
 
@@ -426,7 +444,7 @@ class UIController {
     updateNumberUsage() {
         const usage = this.gameState.getAllNumberUsage();
         
-        for (let num = 1; num <= 9; num++) {
+        for (let num = 1; num <= GRID_SIZE; num++) {
             const element = document.querySelector(`.usage-number[data-number="${num}"]`);
             if (element) {
                 if (usage[num].complete) {
@@ -438,6 +456,63 @@ class UIController {
         }
     }
 
+    handleSaveState() {
+        if (this.gameState.getGameStatus() === GAME_STATUS.PAUSED) {
+            return;
+        }
+
+        if (this.gameState.saveGameState()) {
+            this.updateSaveRestoreButtons();
+            // 保存成功の視覚的フィードバック
+            const saveButton = document.getElementById('save-state');
+            const originalText = saveButton.textContent;
+            saveButton.textContent = '保存完了!';
+            setTimeout(() => {
+                saveButton.textContent = originalText;
+            }, FEEDBACK_DISPLAY_MS);
+        }
+    }
+
+    handleRestoreState() {
+        if (this.gameState.getGameStatus() === GAME_STATUS.PAUSED) {
+            return;
+        }
+
+        if (this.gameState.restoreGameState()) {
+            this.renderGrid();
+            this.selectedNumber = null;
+            this.updateNumberSelection();
+            this.updateNumberUsage();
+            this.showValidationErrors();
+            this.updateGameStatus();
+            
+            // 復元成功の視覚的フィードバック
+            const restoreButton = document.getElementById('restore-state');
+            const originalText = restoreButton.textContent;
+            restoreButton.textContent = '復元完了!';
+            setTimeout(() => {
+                restoreButton.textContent = originalText;
+            }, FEEDBACK_DISPLAY_MS);
+        }
+    }
+
+    updateSaveRestoreButtons() {
+        const saveButton = document.getElementById('save-state');
+        const restoreButton = document.getElementById('restore-state');
+        
+        if (!saveButton || !restoreButton) return;
+
+        const gameStatus = this.gameState.getGameStatus();
+        const isGameInProgress = gameStatus === GAME_STATUS.IN_PROGRESS;
+        const hasSavedState = this.gameState.hasSavedState();
+
+        // 保存ボタンはゲーム進行中のみ有効
+        saveButton.disabled = !isGameInProgress;
+        
+        // 復元ボタンはゲーム進行中かつ保存データがある場合のみ有効
+        restoreButton.disabled = !isGameInProgress || !hasSavedState;
+    }
+
     onPuzzleLoaded(puzzle) {
         if (this.gameState.startNewGame(puzzle)) {
             this.hidePauseOverlay();
@@ -446,6 +521,7 @@ class UIController {
             this.updateNumberSelection();
             this.updateNumberUsage();
             this.updateGameStatus();
+            this.updateSaveRestoreButtons();
         }
     }
 }

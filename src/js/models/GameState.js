@@ -31,6 +31,7 @@ class GameState {
         this.totalPausedTime = 0;
         this.status = GAME_STATUS.NOT_STARTED;
         this.ruleEngine = new RuleEngine();
+        this.savedGameState = null;
     }
 
     createCellTypeGrid() {
@@ -58,6 +59,7 @@ class GameState {
         this.pauseStartTime = null;
         this.totalPausedTime = 0;
         this.status = GAME_STATUS.IN_PROGRESS;
+        this.clearSavedState();
 
         this.initializeCellTypes();
         return true;
@@ -185,6 +187,7 @@ class GameState {
         this.pauseStartTime = null;
         this.totalPausedTime = 0;
         this.status = GAME_STATUS.IN_PROGRESS;
+        this.clearSavedState();
         this.initializeCellTypes();
 
         return true;
@@ -345,6 +348,82 @@ class GameState {
             };
         }
         return usage;
+    }
+
+    saveGameState() {
+        if (this.status !== GAME_STATUS.IN_PROGRESS) {
+            return false;
+        }
+
+        this.savedGameState = {
+            grid: this.currentGrid.clone(),
+            cellTypes: this.deepCloneCellTypes(),
+            moveHistory: this.deepCloneMoveHistory(),
+            timestamp: Date.now()
+        };
+
+        return true;
+    }
+
+    restoreGameState() {
+        if (!this.savedGameState) {
+            return false;
+        }
+
+        if (this.status !== GAME_STATUS.IN_PROGRESS) {
+            return false;
+        }
+
+        this.currentGrid = this.savedGameState.grid.clone();
+        this.cellTypes = this.deepCloneCellTypes(this.savedGameState.cellTypes);
+        this.moveHistory = this.deepCloneMoveHistory(this.savedGameState.moveHistory);
+
+        return true;
+    }
+
+    hasSavedState() {
+        return this.savedGameState !== null;
+    }
+
+    clearSavedState() {
+        this.savedGameState = null;
+    }
+
+    deepCloneCellTypes(sourceTypes = null) {
+        const source = sourceTypes || this.cellTypes;
+        const clonedTypes = [];
+        
+        for (let row = 0; row < GRID_SIZE; row++) {
+            clonedTypes[row] = [];
+            for (let col = 0; col < GRID_SIZE; col++) {
+                clonedTypes[row][col] = source[row][col];
+            }
+        }
+        
+        return clonedTypes;
+    }
+
+    deepCloneMoveHistory(sourceHistory = null) {
+        const source = sourceHistory || this.moveHistory;
+        return source.map(move => {
+            if (move.type === 'candidate') {
+                return {
+                    ...move,
+                    oldCandidates: new Set(move.oldCandidates),
+                    newCandidates: new Set(move.newCandidates)
+                };
+            } else if (move.type === 'auto_clear_candidates') {
+                return {
+                    ...move,
+                    clearedCandidates: move.clearedCandidates.map(cleared => ({
+                        ...cleared,
+                        oldCandidates: new Set(cleared.oldCandidates),
+                        newCandidates: new Set(cleared.newCandidates)
+                    }))
+                };
+            }
+            return { ...move };
+        });
     }
 }
 
