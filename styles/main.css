@@ -1,3 +1,21 @@
+/* CSS Variables for consistent theming */
+:root {
+    --primary-color: #27ae60;
+    --primary-light: #2ecc71;
+    --primary-dark: #229954;
+    --disabled-color: #bdc3c7;
+    --white: #ffffff;
+    --error-color: #e74c3c;
+    --error-light: #ec7063;
+    --error-dark: #c0392b;
+    --border-radius: 8px;
+    --transition-speed: 0.2s;
+    --transition-easing: ease-in-out;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+    --box-shadow-hover: 0 6px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.15);
+    --box-shadow-active: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
 /* Reset and base styles */
 * {
     margin: 0;
@@ -43,37 +61,67 @@ body {
     flex-wrap: wrap;
 }
 
-/* Buttons */
+/* Buttons - 3D design with consistent theming */
 .btn {
     padding: 10px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: var(--border-radius);
     font-size: 1rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all var(--transition-speed) var(--transition-easing);
+    position: relative;
+    box-shadow: var(--box-shadow);
+    transform: translateY(0);
+    color: var(--white);
+    will-change: transform, box-shadow;
+}
+
+.btn:hover {
+    box-shadow: var(--box-shadow-hover);
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    background-color: var(--primary-dark);
+    box-shadow: var(--box-shadow-active);
+    transform: translateY(2px);
 }
 
 .btn-primary {
-    background-color: #3498db;
-    color: white;
+    background-color: var(--primary-light);
 }
 
 .btn-primary:hover {
-    background-color: #2980b9;
+    background-color: var(--primary-light);
 }
 
 .btn-secondary {
-    background-color: #95a5a6;
-    color: white;
+    background-color: var(--primary-light);
 }
 
 .btn-secondary:hover {
-    background-color: #7f8c8d;
+    background-color: var(--primary-light);
+}
+
+.btn-primary:active {
+    background-color: var(--primary-dark);
+}
+
+.btn-secondary:active {
+    background-color: var(--primary-dark);
 }
 
 .btn:disabled {
-    background-color: #bdc3c7;
+    background-color: var(--disabled-color);
     cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn:disabled:hover {
+    background-color: var(--disabled-color);
+    transform: none;
 }
 
 /* Game area */
@@ -92,7 +140,8 @@ body {
     max-width: 450px;
     padding: 15px;
     background-color: #ecf0f1;
-    border-radius: 5px;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 /* Game operations */
@@ -161,7 +210,10 @@ body {
     color: #3498db;
     font-size: 1.2rem;
     font-weight: bold;
-    transition: all 0.3s ease;
+    border-radius: 0;
+    box-shadow: none;
+    transform: none;
+    transition: opacity 0.3s ease;
 }
 
 .usage-number.complete {
@@ -170,6 +222,8 @@ body {
     color: #bdc3c7;
     text-decoration: line-through;
     opacity: 0.6;
+    box-shadow: none;
+    transform: none;
 }
 
 /* Sudoku grid */
@@ -243,16 +297,26 @@ body {
 }
 
 #toggle-input-mode {
-    background-color: #27ae60;
-    color: white;
-    border-color: #27ae60;
+    background-color: var(--primary-light);
+    color: var(--white);
+    border: none;
     border-radius: 20px;
     padding: 10px 20px;
+    box-shadow: var(--box-shadow);
+    transition: all var(--transition-speed) var(--transition-easing);
+    transform: translateY(0);
 }
 
 #toggle-input-mode:hover {
-    background-color: #229954;
-    border-color: #229954;
+    background-color: var(--primary-light);
+    box-shadow: var(--box-shadow-hover);
+    transform: translateY(-1px);
+}
+
+#toggle-input-mode:active {
+    background-color: var(--primary-dark);
+    box-shadow: var(--box-shadow-active);
+    transform: translateY(2px);
 }
 
 .mode-status {
@@ -262,6 +326,9 @@ body {
     font-weight: bold;
     font-size: 0.9rem;
     border-radius: 0;
+    box-shadow: none;
+    transform: none;
+    transition: none;
 }
 
 .mode-status.candidate-mode {
@@ -278,43 +345,78 @@ body {
 .number-btn {
     width: 60px;
     height: 60px;
-    border: 2px solid #bdc3c7;
-    background-color: white;
+    border: none;
+    background-color: var(--white);
+    color: #333;
     font-size: 1.5rem;
     font-weight: bold;
     cursor: pointer;
-    border-radius: 5px;
-    transition: all 0.2s ease;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed) var(--transition-easing);
+    box-shadow: var(--box-shadow);
+    transform: translateY(0);
+    position: relative;
+    will-change: transform, box-shadow, background-color;
 }
 
 .number-btn:hover {
-    background-color: #3498db;
-    color: white;
-    border-color: #3498db;
+    background-color: var(--primary-light);
+    color: var(--white);
+    box-shadow: var(--box-shadow-hover);
+    transform: translateY(-1px);
 }
 
-.number-btn.active {
-    background-color: #2980b9;
-    color: white;
-    border-color: #2980b9;
+.number-btn:active {
+    background-color: var(--primary-dark);
+    color: var(--white);
+    box-shadow: var(--box-shadow-active);
+    transform: translateY(2px);
 }
 
 .number-btn.selected {
-    background-color: #27ae60;
-    color: white;
-    border-color: #27ae60;
-    box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+    background-color: var(--primary-color);
+    color: var(--white);
+    box-shadow: 0 0 10px rgba(39, 174, 96, 0.5), var(--box-shadow);
+}
+
+.number-btn.selected:hover {
+    background-color: var(--primary-light);
+}
+
+.number-btn.selected:active {
+    background-color: var(--primary-dark);
+    color: var(--white);
 }
 
 .clear-btn {
-    background-color: #e74c3c;
-    color: white;
-    border-color: #e74c3c;
+    background-color: var(--white);
+    color: var(--error-color);
 }
 
 .clear-btn:hover {
-    background-color: #c0392b;
-    border-color: #c0392b;
+    background-color: var(--error-light);
+    color: var(--white);
+}
+
+.clear-btn:active {
+    background-color: var(--error-dark);
+    color: var(--white);
+}
+
+.clear-btn.selected {
+    background-color: var(--error-color);
+    color: var(--white);
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5), var(--box-shadow);
+}
+
+.clear-btn.selected:hover {
+    background-color: var(--error-light);
+    color: var(--white);
+}
+
+.clear-btn.selected:active {
+    background-color: var(--error-dark);
+    color: var(--white);
 }
 
 /* Footer */
@@ -550,6 +652,16 @@ body {
         width: 50px;
         height: 50px;
         font-size: 1.2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    .number-btn:hover {
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.12);
+        transform: translateY(-0.5px);
+    }
+    
+    .number-btn:active {
+        transform: translateY(1px);
     }
     
     .game-info {
@@ -570,6 +682,16 @@ body {
         width: 100%;
         font-size: 0.9rem;
         padding: 8px 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    .game-operations .btn:hover {
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.12);
+        transform: translateY(-0.5px);
+    }
+    
+    .game-operations .btn:active {
+        transform: translateY(1px);
     }
     
     .spell-dialog {
@@ -595,5 +717,15 @@ body {
         font-size: 0.9rem;
         padding: 8px 15px;
         min-width: auto;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    .spell-buttons .btn:hover {
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.12);
+        transform: translateY(-0.5px);
+    }
+    
+    .spell-buttons .btn:active {
+        transform: translateY(1px);
     }
 }
