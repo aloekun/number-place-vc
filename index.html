@@ -14,6 +14,7 @@
                 <button id="new-game" class="btn btn-primary">新しい問題</button>
                 <button id="reset-game" class="btn btn-secondary">リセット</button>
                 <button id="undo-move" class="btn btn-secondary">元に戻す</button>
+                <button id="pause-game" class="btn btn-secondary">一時停止</button>
             </div>
         </header>
 
@@ -25,6 +26,13 @@
                 </div>
                 <div class="status">
                     <span id="game-status">問題を生成してください</span>
+                </div>
+            </div>
+            
+            <div id="pause-overlay" class="pause-overlay" style="display: none;">
+                <div class="pause-message">
+                    <h2>ゲームは一時停止中です</h2>
+                    <button id="resume-game" class="btn btn-primary">再開</button>
                 </div>
             </div>
 

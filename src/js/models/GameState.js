@@ -1,6 +1,11 @@
 import { Grid, EMPTY_CELL } from './Grid.js';
 import { RuleEngine } from './RuleEngine.js';
 
+const GRID_SIZE = 9;
+const MINUTES_TO_MS = 60000;
+const SECONDS_TO_MS = 1000;
+const TIME_PAD_LENGTH = 2;
+
 const GAME_STATUS = {
     NOT_STARTED: 'not_started',
     IN_PROGRESS: 'in_progress',
@@ -22,15 +27,17 @@ class GameState {
         this.moveHistory = [];
         this.startTime = null;
         this.endTime = null;
+        this.pauseStartTime = null;
+        this.totalPausedTime = 0;
         this.status = GAME_STATUS.NOT_STARTED;
         this.ruleEngine = new RuleEngine();
     }
 
     createCellTypeGrid() {
         const grid = [];
-        for (let row = 0; row < 9; row++) {
+        for (let row = 0; row < GRID_SIZE; row++) {
             grid[row] = [];
-            for (let col = 0; col < 9; col++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
                 grid[row][col] = CELL_TYPE.EMPTY;
             }
         }
@@ -48,6 +55,8 @@ class GameState {
         this.moveHistory = [];
         this.startTime = Date.now();
         this.endTime = null;
+        this.pauseStartTime = null;
+        this.totalPausedTime = 0;
         this.status = GAME_STATUS.IN_PROGRESS;
 
         this.initializeCellTypes();
@@ -173,6 +182,8 @@ class GameState {
         this.moveHistory = [];
         this.startTime = Date.now();
         this.endTime = null;
+        this.pauseStartTime = null;
+        this.totalPausedTime = 0;
         this.status = GAME_STATUS.IN_PROGRESS;
         this.initializeCellTypes();
 
@@ -193,15 +204,23 @@ class GameState {
             return 0;
         }
 
-        const endTime = this.endTime || Date.now();
-        return endTime - this.startTime;
+        let currentTime = this.endTime || Date.now();
+        let totalElapsed = currentTime - this.startTime;
+        
+        // 一時停止中の時間を計算
+        let pausedTime = this.totalPausedTime;
+        if (this.status === GAME_STATUS.PAUSED && this.pauseStartTime) {
+            pausedTime += currentTime - this.pauseStartTime;
+        }
+        
+        return totalElapsed - pausedTime;
     }
 
     getFormattedTime() {
         const elapsed = this.getElapsedTime();
-        const minutes = Math.floor(elapsed / 60000);
-        const seconds = Math.floor((elapsed % 60000) / 1000);
-        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const minutes = Math.floor(elapsed / MINUTES_TO_MS);
+        const seconds = Math.floor((elapsed % MINUTES_TO_MS) / SECONDS_TO_MS);
+        return `${minutes.toString().padStart(TIME_PAD_LENGTH, '0')}:${seconds.toString().padStart(TIME_PAD_LENGTH, '0')}`;
     }
 
     getCellValue(row, col) {
@@ -279,6 +298,7 @@ class GameState {
     pauseGame() {
         if (this.status === GAME_STATUS.IN_PROGRESS) {
             this.status = GAME_STATUS.PAUSED;
+            this.pauseStartTime = Date.now();
             return true;
         }
         return false;
@@ -286,6 +306,10 @@ class GameState {
 
     resumeGame() {
         if (this.status === GAME_STATUS.PAUSED) {
+            if (this.pauseStartTime) {
+                this.totalPausedTime += Date.now() - this.pauseStartTime;
+                this.pauseStartTime = null;
+            }
             this.status = GAME_STATUS.IN_PROGRESS;
             return true;
         }
@@ -293,7 +317,7 @@ class GameState {
     }
 
     getNumberUsageCount(number) {
-        if (number < 1 || number > 9) {
+        if (number < 1 || number > GRID_SIZE) {
             return 0;
         }
 
@@ -309,12 +333,12 @@ class GameState {
     }
 
     isNumberComplete(number) {
-        return this.getNumberUsageCount(number) === 9;
+        return this.getNumberUsageCount(number) === GRID_SIZE;
     }
 
     getAllNumberUsage() {
         const usage = {};
-        for (let num = 1; num <= 9; num++) {
+        for (let num = 1; num <= GRID_SIZE; num++) {
             usage[num] = {
                 count: this.getNumberUsageCount(num),
                 complete: this.isNumberComplete(num)

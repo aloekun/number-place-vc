@@ -5,7 +5,7 @@ class UIController {
     constructor(gameState, ruleEngine) {
         this.gameState = gameState;
         this.ruleEngine = ruleEngine;
-        this.selectedCell = null;
+        this.selectedNumber = null;
         this.gridElement = null;
         this.timerInterval = null;
         this.candidateMode = false;
@@ -34,6 +34,14 @@ class UIController {
             this.handleUndoMove();
         });
 
+        document.getElementById('pause-game').addEventListener('click', () => {
+            this.handlePauseGame();
+        });
+
+        document.getElementById('resume-game').addEventListener('click', () => {
+            this.handleResumeGame();
+        });
+
         document.addEventListener('keydown', (event) => {
             this.handleKeyInput(event);
         });
@@ -41,7 +49,7 @@ class UIController {
         document.querySelectorAll('.number-btn').forEach(btn => {
             btn.addEventListener('click', (event) => {
                 const number = parseInt(event.target.dataset.number);
-                this.handleNumberInput(number);
+                this.handleNumberSelect(number);
             });
         });
 
@@ -109,59 +117,64 @@ class UIController {
             return;
         }
 
+        if (this.gameState.getGameStatus() === GAME_STATUS.PAUSED) {
+            return;
+        }
+
         if (this.gameState.getCellType(row, col) === CELL_TYPE.GIVEN) {
             return;
         }
 
-        this.selectedCell = { row, col };
-        this.updateCellSelection();
+        if (this.selectedNumber === null) {
+            return;
+        }
+
+        this.handleCellInput(row, col, this.selectedNumber);
     }
 
-    updateCellSelection() {
-        document.querySelectorAll('.sudoku-cell').forEach(cell => {
-            cell.classList.remove('selected');
+    updateNumberSelection() {
+        document.querySelectorAll('.number-btn').forEach(btn => {
+            btn.classList.remove('selected');
         });
 
-        if (this.selectedCell) {
-            const selectedElement = document.querySelector(
-                `[data-row="${this.selectedCell.row}"][data-col="${this.selectedCell.col}"]`
+        if (this.selectedNumber !== null) {
+            const selectedButton = document.querySelector(
+                `.number-btn[data-number="${this.selectedNumber}"]`
             );
-            if (selectedElement) {
-                selectedElement.classList.add('selected');
+            if (selectedButton) {
+                selectedButton.classList.add('selected');
             }
         }
     }
 
     handleKeyInput(event) {
-        if (!this.selectedCell) return;
-
         const key = event.key;
         
         if (key >= '1' && key <= '9') {
             const number = parseInt(key);
-            if (event.shiftKey) {
-                // Shift + number = candidate mode
-                this.handleCandidateInput(number);
-            } else {
-                this.handleNumberInput(number);
-            }
+            this.handleNumberSelect(number);
         } else if (key === 'Delete' || key === 'Backspace' || key === '0') {
-            this.handleNumberInput(EMPTY_CELL);
+            this.handleNumberSelect(EMPTY_CELL);
         } else if (key === 'Escape') {
-            this.selectedCell = null;
-            this.updateCellSelection();
+            this.selectedNumber = null;
+            this.updateNumberSelection();
         } else if (key === 'c' || key === 'C') {
             this.toggleInputMode();
         }
     }
 
-    handleNumberInput(number) {
-        if (!this.selectedCell) return;
+    handleNumberSelect(number) {
+        if (this.gameState.getGameStatus() === GAME_STATUS.PAUSED) {
+            return;
+        }
 
-        const { row, col } = this.selectedCell;
-        
+        this.selectedNumber = number;
+        this.updateNumberSelection();
+    }
+
+    handleCellInput(row, col, number) {
         if (this.candidateMode) {
-            this.handleCandidateInput(number);
+            this.handleCandidateInputAt(row, col, number);
         } else {
             if (this.gameState.makeMove(row, col, number)) {
                 this.updateCell(row, col);
@@ -239,7 +252,7 @@ class UIController {
                 this.showGameComplete();
                 break;
             case GAME_STATUS.PAUSED:
-                statusElement.textContent = '一時停止中';
+                statusElement.textContent = 'ゲーム一時停止中';
                 break;
         }
     }
@@ -256,16 +269,24 @@ class UIController {
     }
 
     handleResetGame() {
+        if (this.gameState.getGameStatus() === GAME_STATUS.PAUSED) {
+            return;
+        }
+
         if (this.gameState.resetGame()) {
             this.renderGrid();
-            this.selectedCell = null;
-            this.updateCellSelection();
+            this.selectedNumber = null;
+            this.updateNumberSelection();
             this.updateNumberUsage();
             this.updateGameStatus();
         }
     }
 
     handleUndoMove() {
+        if (this.gameState.getGameStatus() === GAME_STATUS.PAUSED) {
+            return;
+        }
+
         if (this.gameState.undoMove()) {
             this.renderGrid();
             this.updateNumberUsage();
@@ -331,19 +352,55 @@ class UIController {
         });
     }
 
-    handleCandidateInput(number) {
-        if (!this.selectedCell) return;
-
-        const { row, col } = this.selectedCell;
-        
+    handleCandidateInputAt(row, col, number) {
         if (this.gameState.makeCandidateMove(row, col, number, 'toggle')) {
             this.updateCell(row, col);
         }
     }
 
     toggleInputMode() {
+        if (this.gameState.getGameStatus() === GAME_STATUS.PAUSED) {
+            return;
+        }
+
         this.candidateMode = !this.candidateMode;
         this.updateInputModeIndicator();
+    }
+
+    handlePauseGame() {
+        if (this.gameState.getGameStatus() !== GAME_STATUS.IN_PROGRESS) {
+            return;
+        }
+
+        if (this.gameState.pauseGame()) {
+            this.showPauseOverlay();
+            this.updateGameStatus();
+        }
+    }
+
+    handleResumeGame() {
+        if (this.gameState.getGameStatus() !== GAME_STATUS.PAUSED) {
+            return;
+        }
+
+        if (this.gameState.resumeGame()) {
+            this.hidePauseOverlay();
+            this.updateGameStatus();
+        }
+    }
+
+    showPauseOverlay() {
+        const overlay = document.getElementById('pause-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+    }
+
+    hidePauseOverlay() {
+        const overlay = document.getElementById('pause-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
     }
 
     updateInputModeIndicator() {
@@ -383,9 +440,10 @@ class UIController {
 
     onPuzzleLoaded(puzzle) {
         if (this.gameState.startNewGame(puzzle)) {
+            this.hidePauseOverlay();
             this.renderGrid();
-            this.selectedCell = null;
-            this.updateCellSelection();
+            this.selectedNumber = null;
+            this.updateNumberSelection();
             this.updateNumberUsage();
             this.updateGameStatus();
         }
