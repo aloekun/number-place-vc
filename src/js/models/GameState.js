@@ -5,6 +5,7 @@ const GRID_SIZE = 9;
 const MINUTES_TO_MS = 60000;
 const SECONDS_TO_MS = 1000;
 const TIME_PAD_LENGTH = 2;
+const BASE64_PADDING_DIVISOR = 4;
 
 const GAME_STATUS = {
     NOT_STARTED: 'not_started',
@@ -424,6 +425,106 @@ class GameState {
             }
             return { ...move };
         });
+    }
+
+    generateSpell() {
+        if (!this.originalPuzzle) {
+            return null;
+        }
+
+        try {
+            // 9x9グリッドデータを1次元配列に変換
+            const gridData = [];
+            for (let row = 0; row < GRID_SIZE; row++) {
+                for (let col = 0; col < GRID_SIZE; col++) {
+                    gridData.push(this.originalPuzzle.getCellValue(row, col));
+                }
+            }
+
+            // JSON文字列化してBase64エンコード
+            const jsonString = JSON.stringify(gridData);
+            const base64String = btoa(jsonString);
+            
+            // URLセーフなBase64に変換
+            return base64String.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        } catch (error) {
+            // Silent error handling for spell generation
+            return null;
+        }
+    }
+
+    parseSpell(spellString) {
+        if (!spellString || typeof spellString !== 'string') {
+            return null;
+        }
+
+        try {
+            const gridData = this.decodeSpellString(spellString);
+            if (!gridData) {
+                return null;
+            }
+
+            if (!this.validateGridData(gridData)) {
+                return null;
+            }
+
+            return this.createGridFromData(gridData);
+        } catch (error) {
+            // Silent error handling for spell parsing
+            return null;
+        }
+    }
+
+    decodeSpellString(spellString) {
+        try {
+            // URLセーフなBase64を通常のBase64に復元
+            let base64String = spellString.replace(/-/g, '+').replace(/_/g, '/');
+            
+            // パディングを追加
+            const padLength = (BASE64_PADDING_DIVISOR - (base64String.length % BASE64_PADDING_DIVISOR)) % BASE64_PADDING_DIVISOR;
+            base64String += '='.repeat(padLength);
+
+            // Base64デコードしてJSON解析
+            const jsonString = atob(base64String);
+            return JSON.parse(jsonString);
+        } catch (error) {
+            return null;
+        }
+    }
+
+    validateGridData(gridData) {
+        if (!Array.isArray(gridData) || gridData.length !== GRID_SIZE * GRID_SIZE) {
+            return false;
+        }
+
+        for (const value of gridData) {
+            if (!Number.isInteger(value) || value < 0 || value > GRID_SIZE) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    createGridFromData(gridData) {
+        const grid = new Grid();
+        let index = 0;
+        for (let row = 0; row < GRID_SIZE; row++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                grid.setCellValue(row, col, gridData[index]);
+                index++;
+            }
+        }
+        return grid;
+    }
+
+    startGameFromSpell(spellString) {
+        const puzzle = this.parseSpell(spellString);
+        if (!puzzle) {
+            return false;
+        }
+
+        return this.startNewGame(puzzle);
     }
 }
 

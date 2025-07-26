@@ -5,6 +5,7 @@ const GRID_SIZE = 9;
 const ALERT_DELAY_MS = 100;
 const TIMER_INTERVAL_MS = 1000;
 const FEEDBACK_DISPLAY_MS = 1000;
+const FOCUS_DELAY_MS = 100;
 
 class UIController {
     constructor(gameState, ruleEngine) {
@@ -54,6 +55,30 @@ class UIController {
 
         document.getElementById('restore-state').addEventListener('click', () => {
             this.handleRestoreState();
+        });
+
+        document.getElementById('spell-puzzle').addEventListener('click', () => {
+            this.handleSpellPuzzle();
+        });
+
+        document.getElementById('get-spell').addEventListener('click', () => {
+            this.handleGetSpell();
+        });
+
+        document.getElementById('spell-load').addEventListener('click', () => {
+            this.handleSpellLoad();
+        });
+
+        document.getElementById('spell-cancel').addEventListener('click', () => {
+            this.hideSpellInputDialog();
+        });
+
+        document.getElementById('spell-copy').addEventListener('click', () => {
+            this.handleSpellCopy();
+        });
+
+        document.getElementById('spell-close').addEventListener('click', () => {
+            this.hideSpellDisplayDialog();
         });
 
         document.addEventListener('keydown', (event) => {
@@ -511,6 +536,129 @@ class UIController {
         
         // 復元ボタンはゲーム進行中かつ保存データがある場合のみ有効
         restoreButton.disabled = !isGameInProgress || !hasSavedState;
+    }
+
+    handleSpellPuzzle() {
+        this.showSpellInputDialog();
+    }
+
+    handleGetSpell() {
+        const spell = this.gameState.generateSpell();
+        if (spell) {
+            this.showSpellDisplayDialog(spell);
+        } else {
+            alert('呪文を生成できませんでした。まず問題を生成してください。');
+        }
+    }
+
+    handleSpellLoad() {
+        const spellInput = document.getElementById('spell-input');
+        const spell = spellInput.value.trim();
+        
+        if (!spell) {
+            alert('呪文を入力してください。');
+            return;
+        }
+
+        if (this.gameState.startGameFromSpell(spell)) {
+            this.hideSpellInputDialog();
+            this.renderGrid();
+            this.selectedNumber = null;
+            this.updateNumberSelection();
+            this.updateNumberUsage();
+            this.updateGameStatus();
+            this.updateSaveRestoreButtons();
+            spellInput.value = '';
+        } else {
+            alert('無効な呪文です。正しい呪文を入力してください。');
+        }
+    }
+
+    handleSpellCopy() {
+        const spellOutput = document.getElementById('spell-output');
+        
+        // クリップボードAPIを使用
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(spellOutput.value).then(() => {
+                const copyButton = document.getElementById('spell-copy');
+                const originalText = copyButton.textContent;
+                copyButton.textContent = 'コピーしました!';
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, FEEDBACK_DISPLAY_MS);
+            }).catch(() => {
+                // フォールバック: テキストエリアを選択
+                this.fallbackCopySpell(spellOutput);
+            });
+        } else {
+            // フォールバック: テキストエリアを選択
+            this.fallbackCopySpell(spellOutput);
+        }
+    }
+
+    fallbackCopySpell(textArea) {
+        textArea.select();
+        textArea.setSelectionRange(0, textArea.value.length);
+        
+        try {
+            document.execCommand('copy');
+            const copyButton = document.getElementById('spell-copy');
+            const originalText = copyButton.textContent;
+            copyButton.textContent = 'コピーしました!';
+            setTimeout(() => {
+                copyButton.textContent = originalText;
+            }, FEEDBACK_DISPLAY_MS);
+        } catch (err) {
+            alert('コピーに失敗しました。手動で選択してコピーしてください。');
+        }
+    }
+
+    showSpellInputDialog() {
+        const overlay = document.getElementById('spell-input-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            // フォーカスを当てる
+            setTimeout(() => {
+                const input = document.getElementById('spell-input');
+                if (input) {
+                    input.focus();
+                }
+            }, FOCUS_DELAY_MS);
+        }
+    }
+
+    hideSpellInputDialog() {
+        const overlay = document.getElementById('spell-input-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+            // 入力値をクリア
+            const input = document.getElementById('spell-input');
+            if (input) {
+                input.value = '';
+            }
+        }
+    }
+
+    showSpellDisplayDialog(spell) {
+        const overlay = document.getElementById('spell-display-overlay');
+        const output = document.getElementById('spell-output');
+        
+        if (overlay && output) {
+            output.value = spell;
+            overlay.style.display = 'flex';
+            // テキストエリアを選択状態にする
+            setTimeout(() => {
+                output.select();
+                output.setSelectionRange(0, output.value.length);
+            }, FOCUS_DELAY_MS);
+        }
+    }
+
+    hideSpellDisplayDialog() {
+        const overlay = document.getElementById('spell-display-overlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
     }
 
     onPuzzleLoaded(puzzle) {

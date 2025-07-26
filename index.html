@@ -12,6 +12,8 @@
             <h1>ナンバープレース</h1>
             <div class="game-controls">
                 <button id="new-game" class="btn btn-primary">新しい問題</button>
+                <button id="spell-puzzle" class="btn btn-secondary">呪文の問題</button>
+                <button id="get-spell" class="btn btn-secondary">呪文を取得</button>
                 <button id="reset-game" class="btn btn-secondary">リセット</button>
             </div>
         </header>
@@ -38,6 +40,30 @@
                 <div class="pause-message">
                     <h2>ゲームは一時停止中です</h2>
                     <button id="resume-game" class="btn btn-primary">再開</button>
+                </div>
+            </div>
+
+            <div id="spell-input-overlay" class="spell-overlay" style="display: none;">
+                <div class="spell-dialog">
+                    <h2>呪文の問題</h2>
+                    <p>呪文を入力してパズルを復元してください</p>
+                    <textarea id="spell-input" class="spell-textarea" placeholder="呪文をここに貼り付けてください" rows="3"></textarea>
+                    <div class="spell-buttons">
+                        <button id="spell-load" class="btn btn-primary">問題を読み込む</button>
+                        <button id="spell-cancel" class="btn btn-secondary">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="spell-display-overlay" class="spell-overlay" style="display: none;">
+                <div class="spell-dialog">
+                    <h2>呪文を取得</h2>
+                    <p>この呪文を共有してパズルを友達と楽しもう！</p>
+                    <textarea id="spell-output" class="spell-textarea" readonly rows="3"></textarea>
+                    <div class="spell-buttons">
+                        <button id="spell-copy" class="btn btn-primary">コピー</button>
+                        <button id="spell-close" class="btn btn-secondary">閉じる</button>
+                    </div>
                 </div>
             </div>
 
