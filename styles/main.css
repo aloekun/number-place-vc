@@ -1,13 +1,13 @@
 /* CSS Variables for consistent theming */
 :root {
-    --primary-color: #27ae60;
-    --primary-light: #2ecc71;
-    --primary-dark: #229954;
+    --primary-color: #229954;
+    --primary-light: #27ae60;
+    --primary-dark: #1e8449;
     --disabled-color: #bdc3c7;
     --white: #ffffff;
-    --error-color: #e74c3c;
-    --error-light: #ec7063;
-    --error-dark: #c0392b;
+    --error-color: #c0392b;
+    --error-light: #e74c3c;
+    --error-dark: #a93226;
     --border-radius: 8px;
     --transition-speed: 0.2s;
     --transition-easing: ease-in-out;
@@ -376,7 +376,7 @@ body {
 .number-btn.selected {
     background-color: var(--primary-color);
     color: var(--white);
-    box-shadow: 0 0 10px rgba(39, 174, 96, 0.5), var(--box-shadow);
+    box-shadow: 0 0 10px rgba(34, 153, 84, 0.5), var(--box-shadow);
 }
 
 .number-btn.selected:hover {
@@ -406,7 +406,7 @@ body {
 .clear-btn.selected {
     background-color: var(--error-color);
     color: var(--white);
-    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5), var(--box-shadow);
+    box-shadow: 0 0 10px rgba(192, 57, 43, 0.5), var(--box-shadow);
 }
 
 .clear-btn.selected:hover {
