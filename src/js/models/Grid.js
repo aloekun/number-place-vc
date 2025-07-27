@@ -1,6 +1,8 @@
 const GRID_SIZE = 9;
 const BLOCK_SIZE = 3;
 const EMPTY_CELL = 0;
+const MIN_VALUE = 1;
+const MAX_VALUE = 9;
 
 class Grid {
     constructor(size = GRID_SIZE) {
@@ -205,6 +207,50 @@ class Grid {
         }
 
         return relatedCells;
+    }
+
+    getHighlightCells(number) {
+        if (number < MIN_VALUE || number > MAX_VALUE) {
+            return [];
+        }
+
+        const affectedCells = new Set();
+
+        // Find all cells that contain the selected number
+        for (let row = 0; row < GRID_SIZE; row++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                if (this.cells[row][col] === number) {
+                    // Add all non-given cells in the same row
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        affectedCells.add(`${row},${c}`);
+                    }
+                    
+                    // Add all non-given cells in the same column
+                    for (let r = 0; r < GRID_SIZE; r++) {
+                        affectedCells.add(`${r},${col}`);
+                    }
+                    
+                    // Add all non-given cells in the same block
+                    const blockStartRow = Math.floor(row / BLOCK_SIZE) * BLOCK_SIZE;
+                    const blockStartCol = Math.floor(col / BLOCK_SIZE) * BLOCK_SIZE;
+                    
+                    for (let r = blockStartRow; r < blockStartRow + BLOCK_SIZE; r++) {
+                        for (let c = blockStartCol; c < blockStartCol + BLOCK_SIZE; c++) {
+                            affectedCells.add(`${r},${c}`);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Convert Set to array of coordinates
+        const highlightCells = [];
+        affectedCells.forEach(key => {
+            const [row, col] = key.split(',').map(Number);
+            highlightCells.push({ row, col });
+        });
+        
+        return highlightCells;
     }
 }
 

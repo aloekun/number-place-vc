@@ -33,6 +33,7 @@ class GameState {
         this.status = GAME_STATUS.NOT_STARTED;
         this.ruleEngine = new RuleEngine();
         this.savedGameState = null;
+        this.highlightRangeEnabled = false;
     }
 
     createCellTypeGrid() {
@@ -388,6 +389,15 @@ class GameState {
 
     clearSavedState() {
         this.savedGameState = null;
+    }
+
+    toggleHighlightRange() {
+        this.highlightRangeEnabled = !this.highlightRangeEnabled;
+        return this.highlightRangeEnabled;
+    }
+
+    isHighlightRangeEnabled() {
+        return this.highlightRangeEnabled;
     }
 
     deepCloneCellTypes(sourceTypes = null) {

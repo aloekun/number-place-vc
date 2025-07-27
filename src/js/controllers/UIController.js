@@ -1,7 +1,5 @@
-import { EMPTY_CELL } from '../models/Grid.js';
+import { EMPTY_CELL, GRID_SIZE } from '../models/Grid.js';
 import { CELL_TYPE, GAME_STATUS } from '../models/GameState.js';
-
-const GRID_SIZE = 9;
 const ALERT_DELAY_MS = 100;
 const TIMER_INTERVAL_MS = 1000;
 const FEEDBACK_DISPLAY_MS = 1000;
@@ -95,6 +93,10 @@ class UIController {
         document.getElementById('toggle-input-mode').addEventListener('click', () => {
             this.toggleInputMode();
         });
+
+        document.getElementById('highlight-range-toggle').addEventListener('change', (e) => {
+            this.handleHighlightRangeToggle(e.target.checked);
+        });
     }
 
     renderGrid() {
@@ -169,6 +171,7 @@ class UIController {
         }
 
         this.handleCellInput(row, col, this.selectedNumber);
+        this.updateHighlightRange();
     }
 
     updateNumberSelection() {
@@ -209,6 +212,7 @@ class UIController {
 
         this.selectedNumber = number;
         this.updateNumberSelection();
+        this.updateHighlightRange();
     }
 
     handleCellInput(row, col, number) {
@@ -319,6 +323,7 @@ class UIController {
             this.updateNumberUsage();
             this.updateGameStatus();
             this.updateSaveRestoreButtons();
+            this.updateHighlightRange();
         }
     }
 
@@ -333,6 +338,7 @@ class UIController {
             this.showValidationErrors();
             this.updateGameStatus();
             this.updateSaveRestoreButtons();
+            this.updateHighlightRange();
         }
     }
 
@@ -510,6 +516,7 @@ class UIController {
             this.updateNumberUsage();
             this.showValidationErrors();
             this.updateGameStatus();
+            this.updateHighlightRange();
             
             // 復元成功の視覚的フィードバック
             const restoreButton = document.getElementById('restore-state');
@@ -670,7 +677,37 @@ class UIController {
             this.updateNumberUsage();
             this.updateGameStatus();
             this.updateSaveRestoreButtons();
+            this.updateHighlightRange();
         }
+    }
+
+    handleHighlightRangeToggle(enabled) {
+        this.gameState.highlightRangeEnabled = enabled;
+        this.updateHighlightRange();
+    }
+
+    updateHighlightRange() {
+        // Clear all existing highlights
+        const cells = document.querySelectorAll('.sudoku-cell');
+        cells.forEach(cell => {
+            cell.classList.remove('highlight-range');
+        });
+
+        // If feature is disabled or no number selected, return
+        if (!this.gameState.isHighlightRangeEnabled() || !this.selectedNumber || this.selectedNumber === EMPTY_CELL) {
+            return;
+        }
+
+        // Get cells to highlight
+        const highlightCells = this.gameState.currentGrid.getHighlightCells(this.selectedNumber);
+
+        // Apply highlight class (CSS variable will handle the color)
+        highlightCells.forEach(({row, col}) => {
+            const cellElement = this.gridElement.children[row * GRID_SIZE + col];
+            if (cellElement) {
+                cellElement.classList.add('highlight-range');
+            }
+        });
     }
 }
 

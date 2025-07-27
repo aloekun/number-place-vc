@@ -3,6 +3,7 @@
     --primary-color: #229954;
     --primary-light: #27ae60;
     --primary-dark: #1e8449;
+    --primary-highlight: #a9e8c7;
     --disabled-color: #bdc3c7;
     --white: #ffffff;
     --error-color: #c0392b;
@@ -333,6 +334,91 @@ body {
 
 .mode-status.candidate-mode {
     background-color: #e67e22;
+}
+
+/* Toggle switch for highlight range */
+.highlight-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 20px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 26px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+}
+
+.toggle-label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Highlight range style - simple opaque background */
+.grid-container .sudoku-grid .sudoku-cell.highlight-range {
+    background-color: var(--primary-highlight) !important;
+    color: #333 !important;
+}
+
+.grid-container .sudoku-grid .sudoku-cell.highlight-range:not(.given):not(.error) {
+    background-color: var(--primary-highlight) !important;
+    color: #333 !important;
+}
+
+.grid-container .sudoku-grid .sudoku-cell.highlight-range.user-input {
+    background-color: var(--primary-highlight) !important;
+    color: #333 !important;
+}
+
+.grid-container .sudoku-grid .sudoku-cell.user-input.highlight-range {
+    background-color: var(--primary-highlight) !important;
+    color: #333 !important;
+}
+
+/* Disable hover effect when highlighted */
+.grid-container .sudoku-grid .sudoku-cell.highlight-range:hover {
+    background-color: var(--primary-highlight) !important;
 }
 
 .number-buttons {
